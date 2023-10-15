@@ -25,6 +25,7 @@ struct st_client_data
 };
 
 void show_main_menu();
+st_client_data convert_line_data_to_record(string line, string delim);
 
 string read_string(string message)
 {
@@ -35,6 +36,29 @@ string read_string(string message)
     return sentence;
 }
 
+bool is_client_exist(string account_number, string file_name)
+{
+    string line;
+    st_client_data client_data;
+
+    fstream file;
+    file.open(file_name, ios::in);
+
+    while (getline(file, line))
+    {
+        client_data = convert_line_data_to_record(line, "#//#");
+        if (client_data.account_number == account_number)
+        {
+            file.close();
+            return true;
+        }     
+    }
+
+    file.close();
+
+    return false;
+}
+
 st_client_data read_client_data()
 {
     cout << "Please Enter Client Data: \n";
@@ -42,6 +66,12 @@ st_client_data read_client_data()
     st_client_data client_data;
     cout << "Enter Account Number: ";
     getline(cin >> ws, client_data.account_number); // will extract all white spaces
+
+    while (is_client_exist(client_data.account_number, file_name))
+    {
+        cout << "Client with account number (" << client_data.account_number << ") is found. Enter another account number: ";
+        getline(cin >> ws, client_data.account_number);
+    }
 
     cout << "Enter PinCode: ";
     getline(cin, client_data.pin_code);
