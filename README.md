@@ -9,3 +9,9 @@ The Course is about Algorithms & Problem Solving.
 ---
 
 **Tools:** `Visual Studio`, `Visual Studio Code`.
+
+---
+
+## `Certificate`
+
+![Certificate](/Algorithms%20&%20Problem%20Solving%20Level%203.jpg)
