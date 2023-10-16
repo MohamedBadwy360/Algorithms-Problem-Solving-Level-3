@@ -11,8 +11,10 @@ const string file_name = "clients.txt";
 enum en_main_menu 
 {
     show_client_data = 1, add_new_client = 2, delete_client = 3,
-    update_client = 4, find_client = 5, exit_program = 6
+    update_client = 4, find_client = 5, transactions = 6, exit_program = 7
 };
+
+enum en_transactions {deposit = 1, withdraw = 2, total_balances = 3, main_menu = 4};
 
 struct st_client_data
 {
@@ -20,12 +22,15 @@ struct st_client_data
     string pin_code;
     string name;
     string phone;
-    double account_balance;
+    double account_balance = 0;
     bool mark_for_delete = false;
 };
 
+
 void show_main_menu();
 st_client_data convert_line_data_to_record(string line, string delim);
+void show_transactions_screen();
+
 
 string read_string(string message)
 {
@@ -152,13 +157,6 @@ void add_data_line_to_file(string file_name, string line_data)
         file.close();
     }
 }
-
-//void add_new_client()
-//{
-//    st_client_data client;
-//    client = read_client_data();
-//    add_data_line_to_file(file_name, convert_record_to_line(client));
-//}
 
 void add_clients()
 {
@@ -381,6 +379,13 @@ void go_back_to_main_menu()
     show_main_menu();
 }
 
+void go_back_to_transaction_menu()
+{
+    cout << "\n\nPress any key to go back to main menu...";
+    system("pause>0");
+    show_transactions_screen();
+}
+
 void show_add_new_client_screen()
 {
     cout << "\n-----------------------------------\n";
@@ -437,6 +442,169 @@ void show_exit_screen()
     cout << "-----------------------------------\n";
 }
 
+void deposit_money(string account_number, vector <st_client_data>& v_clients_data)
+{
+    double amount = 0;
+
+    for (st_client_data& c : v_clients_data)
+    {
+        if (c.account_number == account_number)
+        {
+            print_client_data(c);
+            cout << "\nPlease Enter Deposit Amount: ";
+            cin >> amount;
+
+            c.account_balance += amount;
+            break;
+        }
+    }
+    save_client_data_to_file(file_name, v_clients_data);
+    cout << "\nAmount is Deposited Successfully.\n";
+}
+
+void show_deposit_screen()
+{
+    cout << "\n-----------------------------------\n";
+    cout << "\tDeposit Screen\n";
+    cout << "-----------------------------------\n";
+
+    string account_number = read_string("Enter Account Number: ");
+    st_client_data client;
+    vector <st_client_data> v_clients_data = read_clients_data_from_file(file_name);
+
+    while (!find_client_by_account_number(account_number, v_clients_data, client))
+    {
+        cout << "Client with account number (" << account_number << ") is not found.\n";
+        account_number = read_string("\nEnter Account Number: ");
+    }
+
+    deposit_money(account_number, v_clients_data);
+}
+
+void withdraw_money(string account_number, vector <st_client_data>& v_clients_data)
+{
+    double amount;
+
+    for (st_client_data& c : v_clients_data)
+    {
+        if (c.account_number == account_number)
+        {
+            print_client_data(c);
+            cout << "\nPlease Enter Withdraw Amount: ";
+            cin >> amount;
+
+            if (c.account_balance > amount)
+            {
+                c.account_balance -= amount;
+                cout << "\nAmount is Withdrawed Successfully.\n";
+                break;
+            }
+            else
+            {
+                while (amount > c.account_balance)
+                {
+                    cout << "There isn't enough money in the account. The amount is " << c.account_balance << endl;
+                    cout << "\nPlease Enter Withdraw Amount: ";
+                    cin >> amount;
+                }
+
+                c.account_balance -= amount;
+                cout << "\nAmount is Withdrawed Successfully.\n";
+                break;
+            }
+        }
+    }
+
+    save_client_data_to_file(file_name, v_clients_data);
+}
+
+void show_withdraw_screen()
+{
+    cout << "\n-----------------------------------\n";
+    cout << "\tWithdraw Screen\n";
+    cout << "-----------------------------------\n";
+
+    string account_number = read_string("Enter Account Number: ");
+    st_client_data client;
+    vector <st_client_data> v_clients_data = read_clients_data_from_file(file_name);
+
+    while (!find_client_by_account_number(account_number, v_clients_data, client))
+    {
+        cout << "Client with account number (" << account_number << ") is not found.\n";
+        account_number = read_string("\nEnter Account Number: ");
+    }
+
+    withdraw_money(account_number, v_clients_data);
+}
+
+void show_total_balance()
+{
+    vector<st_client_data> clients_data = read_clients_data_from_file(file_name);
+
+    print_header(clients_data);
+
+    double balance = 0;
+
+    for (st_client_data& client_data : clients_data)
+    {
+        print_record(client_data);
+        balance += client_data.account_balance;
+    }
+
+    cout << "\n\n\t\t\t\tTotal Balance = " << balance << endl << endl;
+}
+
+en_transactions read_transaction_option()
+{
+    short option;
+    cout << "Enter Transaction: ";
+    cin >> option;
+
+    return en_transactions(option);
+}
+
+void perform_transactions_options(en_transactions transaction)
+{
+    switch (transaction)
+    {
+        case en_transactions::deposit:
+            system("cls");
+            show_deposit_screen();
+            go_back_to_transaction_menu();
+            break;
+        case en_transactions::withdraw:
+            system("cls");
+            show_withdraw_screen();
+            go_back_to_transaction_menu();
+            break;
+        case en_transactions::total_balances:
+            system("cls");
+            show_total_balance();
+            go_back_to_transaction_menu();
+            break;
+        case en_transactions::main_menu:
+            system("cls");
+            show_main_menu();
+            break;
+    }
+}
+
+void show_transactions_screen()
+{
+    system("cls");
+
+    cout << "======================================\n";
+    cout << "\tTransactions Menu Screen\n";
+    cout << "======================================\n";
+    cout << "\t[1] Deposit.\n";
+    cout << "\t[2] Withdraw.\n";
+    cout << "\t[3] Total Balances.\n";
+    cout << "\t[4] Main Menu.\n";
+    cout << "======================================\n";
+
+    perform_transactions_options(read_transaction_option());
+}
+
 void perform_menu_option(en_main_menu option)
 {
     switch (option)
@@ -466,6 +634,10 @@ void perform_menu_option(en_main_menu option)
             show_find_client_screen();
             go_back_to_main_menu();
             break;
+        case en_main_menu::transactions:
+            system("cls");
+            show_transactions_screen();
+            break;
         case en_main_menu::exit_program:
             system("cls");
             show_exit_screen();
@@ -485,7 +657,8 @@ void show_main_menu()
     cout << "\t[3] Delete Client.\n";
     cout << "\t[4] Update Client Info.\n";
     cout << "\t[5] Find Client.\n";
-    cout << "\t[6] Exit.\n";
+    cout << "\t[6] Transactions.\n";
+    cout << "\t[7] Exit.\n";
     cout << "======================================\n";
 
     perform_menu_option((en_main_menu)read_menu_option());
